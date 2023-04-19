@@ -33,28 +33,7 @@ void RandValues(int* ARR, int size)
 	for (int i = 0; i < size; i++)
 		ARR[i] = distribution(generator);
 }
-int Min(int a, int b)
-{
-	if (a > b)
-	{
-		return b;
-	}
-	else
-	{
-		return a;
-	}
-}
-int GetMinRun(int size)
-{
-	int r{ 0 };
-	while (size >= 64)
-	{
-		r |= size & 1;
-		size >>= 1;
-	}
-	return size + r;
-}
-void InsertSort(int*& arr, long long& countComp, long long& countEx  ,int right, int left = 0)
+void InsertSort(int*& arr, long long& countComp, long long& countEx, int right, int left = 0)
 {
 	countComp = 0;
 	countEx = 0;
@@ -77,6 +56,27 @@ void InsertSort(int*& arr, long long& countComp, long long& countEx  ,int right,
 		}
 		arr[j + 1] = key;
 	}
+}
+int Min(int a, int b)
+{
+	if (a > b)
+	{
+		return b;
+	}
+	else
+	{
+		return a;
+	}
+}
+int GetMinRun(int size)
+{
+	int r{ 0 };
+	while (size >= 64)
+	{
+		r |= size & 1;
+		size >>= 1;
+	}
+	return size + r;
 }
 void Merge(int*& arr, long long& countComp, long long& countEx, int left, int mid, int right)
 {
@@ -237,7 +237,7 @@ void fillStructInsert(int size, string binFileName, table& table)
 	table.exchanges << countEx << ";";
 	table.clock << elapsedTime << ";";
 
-	//delete[] arr;
+	delete[] arr;
 }
 void fillStructTim(int size, string binFileName, table& table)
 {
@@ -402,9 +402,9 @@ int main()
 			table insertSort_best;
 			table insertSort_worst;
 			table insertSort_average;
-			//table timSort_best;
-			//table timSort_worst;
-			//table timSort_average;
+			table timSort_best;
+			table timSort_worst;
+			table timSort_average;
 
 			for (int size = 1000; size <= 100000; size += 500)
 			{
@@ -412,17 +412,17 @@ int main()
 				fillStructInsert(size, "bestCase.bin", insertSort_best);
 				fillStructInsert(size, "worstCase.bin", insertSort_worst);
 				fillStructInsert(size, "averageCase.bin", insertSort_average);
-/*				fillStructTim(size, "bestCase.bin", timSort_best);
+				fillStructTim(size, "bestCase.bin", timSort_best);
 				fillStructTim(size, "worstCase.bin", timSort_worst);
 				fillStructTim(size, "averageCase.bin", timSort_average);
-	*/		}
+			}
 			
 			fillFile("insertSort(best).txt", insertSort_best);
 			fillFile("insertSort(worst).txt", insertSort_worst);
 			fillFile("insertSort(average).txt", insertSort_average);
-			/*fillFile("TimSort(best).txt", timSort_best);
+			fillFile("TimSort(best).txt", timSort_best);
 			fillFile("TimSort(worst).txt", timSort_worst);
-			fillFile("TimSort(average).txt", timSort_average);*/
+			fillFile("TimSort(average).txt", timSort_average);
 		}
 		break;
 		default:
