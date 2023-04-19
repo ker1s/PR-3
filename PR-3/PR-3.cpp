@@ -4,9 +4,20 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-
+#include <time.h>
+#include <chrono>
 
 using namespace std;
+using namespace std::chrono;
+
+struct table
+{
+	stringstream zero;
+	stringstream exchanges;
+	stringstream comparisons;
+	stringstream clock;
+	table() : zero(";"), exchanges(""), comparisons(""), clock("") {}
+};
 
 void ArrOut(int* arr, int size)
 {
@@ -43,10 +54,10 @@ int GetMinRun(int size)
 	}
 	return size + r;
 }
-void InsertSort(int*& arr, int& countComp, int countSwap  ,int right, int left = 0)
+void InsertSort(int*& arr, long long& countComp, long long& countEx  ,int right, int left = 0)
 {
 	countComp = 0;
-	countSwap = 0;
+	countEx = 0;
 	for (int i = left + 1; i < right; i++)
 	{
 		int key = arr[i];
@@ -56,12 +67,12 @@ void InsertSort(int*& arr, int& countComp, int countSwap  ,int right, int left =
 			arr[j + 1] = arr[j];
 			j--;
 			countComp++;
-			countSwap++;
+			countEx++;
 		}
 		arr[j + 1] = key;
 	}
 }
-void Merge(int*& arr, int left, int mid, int right)
+void Merge(int*& arr, long long& countComp, long long& countEx, int left, int mid, int right)
 {
 	int sizeT = right - left + 1;
 	int* temp{ new int[sizeT] };
@@ -82,6 +93,8 @@ void Merge(int*& arr, int left, int mid, int right)
 			leftIndex++;
 		}
 		tempIndex++;
+		countComp++;
+		countEx++;
 	}
 
 	while (leftIndex <= mid)
@@ -89,6 +102,7 @@ void Merge(int*& arr, int left, int mid, int right)
 		temp[tempIndex] = arr[leftIndex];
 		leftIndex++;
 		tempIndex++;
+		countEx++;
 	}
 
 	while (rightIndex <= right)
@@ -96,31 +110,45 @@ void Merge(int*& arr, int left, int mid, int right)
 		temp[tempIndex] = arr[rightIndex];
 		rightIndex++;
 		tempIndex++;
+		countEx++;
 	}
 	for (int i = left, j = 0; i <= right; i++, j++)
 	{
 		arr[i] = temp[j];
 	}
+
 	delete[] temp;
 }
-//void TimSort(int*& arr, int size)
-//{
-//	int minRunSize{ GetMinRun(size) };
-//	for (int i = 0; i < size; i += minRunSize)
-//	{
-//		InsertSort(arr, min((i + minRunSize - 1), (size - 1)), i);
-//	}
-//
-//	for (int runSize = minRunSize; runSize < size; runSize = 2 * runSize)
-//	{
-//		for (int left = 0; left < size; left += 2 * runSize)
-//		{
-//			int mid{ left + runSize - 1 };
-//			int right{ Min((left + 2 * runSize - 1),(size - 1)) };
-//			Merge(arr, left, mid, right);
-//		}
-//	}
-//}
+void TimSort(int*& arr, int size, int& countComp, int& countEx)
+{
+	int minRunSize{ GetMinRun(size) };
+	for (int i = 0; i < size; i += minRunSize)
+	{
+		long long tCC{ 0 };
+		long long tCE{ 0 };
+		InsertSort(arr, tCC, tCE, Min((i + minRunSize - 1), (size - 1)), i);
+		countComp += tCC;
+		countEx += tCE;
+	}
+
+	for (int runSize = minRunSize; runSize < size; runSize = 2 * runSize)
+	{
+		for (int left = 0; left < size; left += 2 * runSize)
+		{
+			long long tCC{ 0 };
+			long long tCE{ 0 };
+			int mid{ left + runSize - 1 };
+			int right{ Min((left + 2 * runSize - 1),(size - 1)) };
+			if (mid > size)
+			{
+				mid = left + (right - left - 1) / 2;
+			}
+			Merge(arr, tCC, tCE, left, mid, right);
+			countComp += tCC;
+			countEx += tCE;
+		}
+	}
+}
 
 bool Write2Bin(int* arr, int size, string name)
 {
@@ -150,7 +178,6 @@ bool ReadBin(int* arr, int size, string name)
 		return false;
 	}
 }
-
 void InputFileARR(int* ARR, int size) {
 
 	string line;
@@ -172,18 +199,70 @@ void InputFileARR(int* ARR, int size) {
 	}
 	file.close();
 }
-
-void ArrOutFile(int*& arr, int size)
+void ArrOutFile(int*& arr, int size, string name)
 {
-	ofstream out_file("ching-chong.txt");
+	ofstream out_file(name);
 	if (out_file.is_open())
 	{
 		for (int i = 0; i < size; i++)
-			out_file << setw(10) << arr[i];
+			out_file << arr[i] << ';';
 		out_file.close();
-		cout << "Массив записан в ching-chong.txt" << endl;
+		cout << "Массив записан в " << name << endl;
 	}
 	else cerr << "Неудалось открыть файл!!!";
+}
+
+void fillStructInsert(int size, string binFileName, table& table)
+{
+	long long countComp{ 0 }, countEx{ 0 };
+	int* arr{ new int[size] };
+	
+	ReadBin(arr, size, binFileName);
+	
+	auto startTime{ steady_clock::now() };
+	InsertSort(arr, countComp, countEx, size);
+	auto endTime{ steady_clock::now() };
+	
+	auto time{ duration_cast<microseconds>(endTime - startTime) };
+	int elapsedTime = static_cast<int>(time.count());
+	
+	table.zero << size << ";";
+	table.comparisons << countComp << ";";
+	table.exchanges << countEx << ";";
+	table.clock << elapsedTime << ";";
+
+	//delete[] arr;
+}
+void fillStructTim(int size, string binFileName, table& table)
+{
+	int countComp{ 0 }, countEx{ 0 };
+	int* arr{ new int[size] };
+	
+	ReadBin(arr, size, binFileName);
+	
+	auto startTime{ steady_clock::now() };
+	TimSort(arr, size,countComp, countEx);
+	auto endTime{ steady_clock::now() };
+	
+	auto time{ duration_cast<microseconds>(endTime - startTime) };
+	int elapsedTime = static_cast<int>(time.count());
+	
+	table.zero << size << ";";
+	table.comparisons << countComp << ";";
+	table.exchanges << countEx << ";";
+	table.clock << elapsedTime << ";";
+	
+	delete[] arr;
+}
+
+void fillFile(string filename, table& table)
+{
+	ofstream file("./results/"+filename);
+	file << table.zero.str() << "\n";
+	file << table.comparisons.str() << "\n";
+	file << table.exchanges.str() << "\n";
+	file << table.clock.str() << "\n";
+	file.close();
 }
 
 
@@ -202,11 +281,12 @@ int main()
 		case 1:
 		{
 			int size;
+			int x{ 0 }, y{ 0 };
 			cout << "Сколько элементов в массиве?\n"; cin >> size;
 			int* arr{ new int[size] };
 			RandValues(arr, size);
 			ArrOut(arr, size);
-			//TimSort(arr, size);
+			TimSort(arr, size, x, y);
 			cout << endl << endl;
 			ArrOut(arr, size);
 		}
@@ -215,18 +295,20 @@ int main()
 		//Paste
 		case 2:
 		{
+			long long x{ 0 }, y{ 0 };
 			int size;
 			int countComps{ 0 };
 			cout << "Сколько элементов в массиве?\n"; cin >> size;
 			int* arr{ new int[size] };
 			RandValues(arr, size);
 			ArrOut(arr, size);
-//			InsertSort(arr, size);
+			InsertSort(arr, x, y, size);
 			cout << endl << endl;
 			ArrOut(arr, size);
 		}
 		break;
 
+		//подготовка исходных данных и занесение их в бинарный файл.
 		case 3:
 		{
 			int size;
@@ -234,7 +316,11 @@ int main()
 			int countComps{ 0 };
 			cout << "Сколько элементов в массиве?\n"; cin >> size;
 			int* arr{ new int[size] };
-			RandValues(arr, size);
+			int j{ 49999 };
+			for (int i = 0; i < 100000; i++,j--)
+			{
+				arr[i] = j;
+			}
 			cout << "Название: "; cin >> name;
 			if (Write2Bin(arr, size, name))
 			{
@@ -248,24 +334,48 @@ int main()
 		}
 		break;
 
-
+		//вывод в тескстовый для проверки
 		case 4:
 		{
-			string name;
 			int size;
 			cout << "Сколько элементов в массиве?\n"; cin >> size;
 			int* arr{ new int[size] };
-			cout << "Название: "; cin >> name;
-			if(ReadBin(arr, size, name))
+			ReadBin(arr, size, "averageCase.bin");
+			ArrOutFile(arr, size, "averageCase.txt");
+			ReadBin(arr, size, "bestCase.bin");
+			ArrOutFile(arr, size, "bestCase.txt");
+			ReadBin(arr, size, "worstCase.bin");
+			ArrOutFile(arr, size, "worstCase.txt");
+		}
+		break;
+
+		//составление файлов
+		case 5:
+		{
+			table insertSort_best;
+			table insertSort_worst;
+			table insertSort_average;
+			table timSort_best;
+			table timSort_worst;
+			table timSort_average;
+
+			for (int size = 1000; size <= 100000; size += 500)
 			{
-				cout << "Всё норм";
-			}
-			else
-			{
-			cout << "Ошибка!!!";
-			}
-			ArrOutFile(arr, size);
 			
+				fillStructInsert(size, "bestCase.bin", insertSort_best);
+				fillStructInsert(size, "worstCase.bin", insertSort_worst);
+				fillStructInsert(size, "averageCase.bin", insertSort_average);
+				fillStructTim(size, "bestCase.bin", timSort_best);
+				fillStructTim(size, "worstCase.bin", timSort_worst);
+				fillStructTim(size, "averageCase.bin", timSort_average);
+			}
+			
+			fillFile("insertSort(best).txt", insertSort_best);
+			fillFile("insertSort(worst).txt", insertSort_worst);
+			fillFile("insertSort(average).txt", insertSort_average);
+			fillFile("TimSort(best).txt", timSort_best);
+			fillFile("TimSort(worst).txt", timSort_worst);
+			fillFile("TimSort(average).txt", timSort_average);
 		}
 		break;
 		default:
