@@ -60,6 +60,7 @@ void InsertSort(int*& arr, long long& countComp, long long& countEx  ,int right,
 	countEx = 0;
 	for (int i = left + 1; i < right; i++)
 	{
+		bool count{ false };
 		int key = arr[i];
 		int j = i - 1;
 		while (j >= left && arr[j] > key)
@@ -68,6 +69,11 @@ void InsertSort(int*& arr, long long& countComp, long long& countEx  ,int right,
 			j--;
 			countComp++;
 			countEx++;
+			count = true;
+		}
+		if (!count)
+		{
+			countComp++;
 		}
 		arr[j + 1] = key;
 	}
@@ -316,8 +322,8 @@ int main()
 			int countComps{ 0 };
 			cout << "Сколько элементов в массиве?\n"; cin >> size;
 			int* arr{ new int[size] };
-			int j{ 49999 };
-			for (int i = 0; i < 100000; i++,j--)
+			int j{ -50000};
+			for (int i = 0; i < 100000; i++,j++)
 			{
 				arr[i] = j;
 			}
@@ -333,9 +339,50 @@ int main()
 			;
 		}
 		break;
-
-		//вывод в тескстовый для проверки
 		case 4:
+		{
+			int size;
+			string name;
+			int countComps{ 0 };
+			cout << "Сколько элементов в массиве?\n"; cin >> size;
+			int* arr{ new int[size] };
+			int j{ 49999 };
+			for (int i = 0; i < 100000; i++,j--)
+			{
+				arr[i] = j;
+			}
+			cout << "Название: "; cin >> name;
+			if (Write2Bin(arr, size, name))
+			{
+				cout << "Всё норм";
+			}
+			else
+			{
+				cout << "Ошибка!!!";
+			}
+		}
+		break;
+		case 5:
+		{
+			int size;
+			string name;
+			int countComps{ 0 };
+			cout << "Сколько элементов в массиве?\n"; cin >> size;
+			int* arr{ new int[size] };
+			
+			if (Write2Bin(arr, size, name))
+			{
+				cout << "Всё норм";
+			}
+			else
+			{
+				cout << "Ошибка!!!";
+			}
+		}
+		break;
+		
+		//вывод в тескстовый для проверки
+		case 6:
 		{
 			int size;
 			cout << "Сколько элементов в массиве?\n"; cin >> size;
@@ -350,14 +397,14 @@ int main()
 		break;
 
 		//составление файлов
-		case 5:
+		case 7:
 		{
 			table insertSort_best;
 			table insertSort_worst;
 			table insertSort_average;
-			table timSort_best;
-			table timSort_worst;
-			table timSort_average;
+			//table timSort_best;
+			//table timSort_worst;
+			//table timSort_average;
 
 			for (int size = 1000; size <= 100000; size += 500)
 			{
@@ -365,17 +412,17 @@ int main()
 				fillStructInsert(size, "bestCase.bin", insertSort_best);
 				fillStructInsert(size, "worstCase.bin", insertSort_worst);
 				fillStructInsert(size, "averageCase.bin", insertSort_average);
-				fillStructTim(size, "bestCase.bin", timSort_best);
+/*				fillStructTim(size, "bestCase.bin", timSort_best);
 				fillStructTim(size, "worstCase.bin", timSort_worst);
 				fillStructTim(size, "averageCase.bin", timSort_average);
-			}
+	*/		}
 			
 			fillFile("insertSort(best).txt", insertSort_best);
 			fillFile("insertSort(worst).txt", insertSort_worst);
 			fillFile("insertSort(average).txt", insertSort_average);
-			fillFile("TimSort(best).txt", timSort_best);
+			/*fillFile("TimSort(best).txt", timSort_best);
 			fillFile("TimSort(worst).txt", timSort_worst);
-			fillFile("TimSort(average).txt", timSort_average);
+			fillFile("TimSort(average).txt", timSort_average);*/
 		}
 		break;
 		default:
